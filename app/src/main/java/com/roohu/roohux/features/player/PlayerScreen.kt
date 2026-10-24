@@ -16,6 +16,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.CircularProgressIndicator
@@ -56,6 +58,7 @@ fun PlayerScreen(uri: String, title: String, onBack: () -> Unit) {
     var audioOnly by remember { mutableStateOf(false) }
     var controlsVisible by remember { mutableStateOf(true) }
     var buffering by remember { mutableStateOf(false) }
+    var playing by remember { mutableStateOf(false) }
     var backPressed by remember { mutableStateOf(false) }
     val backScale by animateFloatAsState(if (backPressed) 0.92f else 1f, label = "backScale")
     LaunchedEffect(backPressed) { if (backPressed) { delay(120); backPressed = false } }
@@ -73,6 +76,8 @@ fun PlayerScreen(uri: String, title: String, onBack: () -> Unit) {
                 errorText = "Can't play this media (${error.errorCodeName}). The file may be missing, protected, or in an unsupported format."
             }
 
+            override fun onIsPlayingChanged(isPlaying: Boolean) { playing = isPlaying }
+
             override fun onTracksChanged(tracks: Tracks) {
                 audioOnly = tracks.groups.isNotEmpty() && tracks.isTypeSelected(C.TRACK_TYPE_AUDIO) && !tracks.isTypeSelected(C.TRACK_TYPE_VIDEO)
             }
@@ -87,6 +92,7 @@ fun PlayerScreen(uri: String, title: String, onBack: () -> Unit) {
                 val c = future.get()
                 attached = c
                 c.addListener(listener)
+                playing = c.isPlaying
                 c.setMediaItem(
                     MediaItem.Builder()
                         .setUri(uri)
@@ -222,6 +228,38 @@ fun PlayerScreen(uri: String, title: String, onBack: () -> Unit) {
                     overflow = TextOverflow.Ellipsis,
                     style = MaterialTheme.typography.titleMedium,
                 )
+            }
+            // Compact transport shortcuts. Media3's original timeline and advanced controls remain available.
+            if (!audioOnly && controller != null) {
+                Row(horizontalArrangement = Arrangement.spacedBy(3.dp), verticalAlignment = Alignment.CenterVertically) {
+                    listOf("−10", if (playing) "Ⅱ" else "▶", "+10").forEachIndexed { index, label ->
+                        TextButton(
+                            onClick = {
+                                controller?.let { player ->
+                                    when (index) {
+                                        0 -> player.seekTo((player.currentPosition - 10_000L).coerceAtLeast(0L))
+                                        1 -> if (player.isPlaying) player.pause() else player.play()
+                                        else -> {
+                                            val end = player.duration.takeIf { it > 0L } ?: Long.MAX_VALUE
+                                            player.seekTo((player.currentPosition + 10_000L).coerceAtMost(end))
+                                        }
+                                    }
+                                }
+                            },
+                            modifier = Modifier
+                                .size(width = 43.dp, height = 40.dp)
+                                .clip(RoundedCornerShape(14.dp)),
+                            contentPadding = PaddingValues(0.dp),
+                            colors = ButtonDefaults.textButtonColors(
+                                containerColor = if (index == 1) Color(0xFF80E7F2).copy(alpha = 0.22f)
+                                    else Color.White.copy(alpha = 0.12f),
+                                contentColor = Color.White,
+                            ),
+                        ) {
+                            Text(label, style = MaterialTheme.typography.labelMedium, maxLines = 1)
+                        }
+                    }
+                }
             }
         }
         }
