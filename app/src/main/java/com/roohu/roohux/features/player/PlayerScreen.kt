@@ -209,13 +209,18 @@ fun PlayerScreen(uri: String, title: String, onBack: () -> Unit) {
                     ),
                 )
                 .statusBarsPadding()
-                .padding(start = 12.dp, end = 20.dp, top = 8.dp, bottom = 36.dp),
+                .padding(
+                    start = 12.dp,
+                    end = 16.dp,
+                    top = if (landscape) 2.dp else 8.dp,
+                    bottom = if (landscape) 12.dp else 36.dp,
+                ),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            horizontalArrangement = Arrangement.spacedBy(if (landscape) 7.dp else 12.dp),
         ) {
             Box(
                 Modifier
-                    .size(44.dp)
+                    .size(if (landscape) 38.dp else 44.dp)
                     .scale(backScale)
                     .clip(RoundedCornerShape(16.dp))
                     .background(Color.White.copy(alpha = 0.13f)),
@@ -226,7 +231,7 @@ fun PlayerScreen(uri: String, title: String, onBack: () -> Unit) {
                 }
             }
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
-                Text(
+                if (!landscape) Text(
                     "ROOHUX  /  NOW PLAYING",
                     color = Color(0xFF80E7F2),
                     style = MaterialTheme.typography.labelSmall,
@@ -235,7 +240,7 @@ fun PlayerScreen(uri: String, title: String, onBack: () -> Unit) {
                 Text(
                     title,
                     color = Color.White,
-                    maxLines = 2,
+                    maxLines = if (landscape) 1 else 2,
                     overflow = TextOverflow.Ellipsis,
                     style = MaterialTheme.typography.titleMedium,
                 )
@@ -251,7 +256,7 @@ fun PlayerScreen(uri: String, title: String, onBack: () -> Unit) {
                         contentColor = Color.White,
                     ),
                 ) {
-                    Text("Exit fullscreen", style = MaterialTheme.typography.labelSmall, maxLines = 1)
+                    Text("Exit", style = MaterialTheme.typography.labelSmall, maxLines = 1)
                 }
             }
             // Compact transport shortcuts. Media3's original timeline and advanced controls remain available.
