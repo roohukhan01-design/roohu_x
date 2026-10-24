@@ -63,6 +63,27 @@ private fun BrowserContent(manager: BrowserManager, tab: BrowserTab, onNavigate:
         AddressBar(manager, tab)
         Box(Modifier.weight(1f).fillMaxWidth()) {
             if (tab.blank) NewTabPage(manager, tab) else key(tab.id) { WebHost(manager, tab) }
+            if (tab.loading && !tab.blank && tab.error == null) {
+                Surface(
+                    Modifier.align(Alignment.TopCenter).padding(top = 12.dp),
+                    shape = RoundedCornerShape(24.dp),
+                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.94f),
+                    shadowElevation = 8.dp,
+                ) {
+                    Row(
+                        Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    ) {
+                        CircularProgressIndicator(
+                            progress = { (tab.progress / 100f).coerceIn(0f, 1f) },
+                            modifier = Modifier.size(22.dp),
+                            strokeWidth = 2.dp,
+                        )
+                        Text("Loading website · ${tab.progress}%", style = MaterialTheme.typography.labelMedium)
+                    }
+                }
+            }
             tab.error?.let { ErrorOverlay(tab, it) { tab.error = null; manager.reloadOrStop(tab) } }
             tab.httpStatus?.let { code ->
                 Surface(Modifier.align(Alignment.TopCenter).padding(8.dp), shape = RoundedCornerShape(12.dp), color = MaterialTheme.colorScheme.errorContainer) {
