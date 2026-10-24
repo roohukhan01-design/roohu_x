@@ -84,6 +84,7 @@ fun PlayerScreen(uri: String, title: String, onBack: () -> Unit) {
     var speedIndex by remember(context) { mutableIntStateOf(positionPrefs.getInt("player_speed_index", 1).coerceIn(0, speedOptions.lastIndex)) }
     var repeatOne by remember(context) { mutableStateOf(positionPrefs.getBoolean("player_repeat_one", false)) }
     var muted by remember(context) { mutableStateOf(positionPrefs.getBoolean("player_muted", false)) }
+    var sleepTimerMinutes by remember { mutableIntStateOf(0) }
     val aspectNames = listOf("Fit", "Fill", "Zoom")
     val aspectModes = listOf(AspectRatioFrameLayout.RESIZE_MODE_FIT, AspectRatioFrameLayout.RESIZE_MODE_FILL, AspectRatioFrameLayout.RESIZE_MODE_ZOOM)
     var aspectIndex by remember(context) { mutableIntStateOf(positionPrefs.getInt("player_aspect_index", 0).coerceIn(0, 2)) }
@@ -166,6 +167,17 @@ fun PlayerScreen(uri: String, title: String, onBack: () -> Unit) {
                 positionPrefs.edit().putLong(positionKey, c.currentPosition).apply()
             }
             delay(2_000)
+        }
+    }
+
+    // Sleep timer pauses playback after the selected interval.
+    LaunchedEffect(sleepTimerMinutes, controller) {
+        if (sleepTimerMinutes > 0) {
+            delay(sleepTimerMinutes * 60_000L)
+            controller?.pause()
+            seekNotice = "Sleep timer finished"
+            seekNoticeVersion++
+            sleepTimerMinutes = 0
         }
     }
 
@@ -348,6 +360,25 @@ fun PlayerScreen(uri: String, title: String, onBack: () -> Unit) {
                 ),
             ) {
                 Text(if (muted) "Muted" else "Sound", style = MaterialTheme.typography.labelSmall, maxLines = 1)
+            }
+            TextButton(
+                onClick = {
+                    sleepTimerMinutes = when (sleepTimerMinutes) {
+                        0 -> 15
+                        15 -> 30
+                        30 -> 60
+                        else -> 0
+                    }
+                    seekNotice = if (sleepTimerMinutes == 0) "Sleep timer off" else "Pauses in ${sleepTimerMinutes} min"
+                    seekNoticeVersion++
+                },
+                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
+                colors = ButtonDefaults.textButtonColors(
+                    containerColor = if (sleepTimerMinutes > 0) playerAccent.copy(alpha = 0.2f) else Color.White.copy(alpha = 0.12f),
+                    contentColor = if (sleepTimerMinutes > 0) playerAccent else Color.White,
+                ),
+            ) {
+                Text(if (sleepTimerMinutes == 0) "Sleep" else "${sleepTimerMinutes}m", style = MaterialTheme.typography.labelSmall, maxLines = 1)
             }
             TextButton(
                 onClick = { screenLocked = true },
