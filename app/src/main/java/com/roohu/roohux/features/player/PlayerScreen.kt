@@ -9,6 +9,10 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.Surface
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.*
 import kotlinx.coroutines.delay
 import androidx.compose.ui.Alignment
@@ -43,6 +47,9 @@ fun PlayerScreen(uri: String, title: String, onBack: () -> Unit) {
     var controller by remember { mutableStateOf<MediaController?>(null) }
     var errorText by remember { mutableStateOf<String?>(null) }
     var audioOnly by remember { mutableStateOf(false) }
+    var showSleepTimer by remember { mutableStateOf(false) }
+    var sleepTimerMinutes by remember { mutableStateOf<Int?>(null) }
+    var sleepTimerMessage by remember { mutableStateOf<String?>(null) }
     val positionPrefs = remember(context) { context.getSharedPreferences("roohux_playback_positions", android.content.Context.MODE_PRIVATE) }
     val positionKey = remember(uri) { "position_${uri.hashCode()}" }
 
@@ -111,6 +118,15 @@ fun PlayerScreen(uri: String, title: String, onBack: () -> Unit) {
         }
     }
 
+    LaunchedEffect(controller, sleepTimerMinutes) {
+        val minutes = sleepTimerMinutes ?: return@LaunchedEffect
+        delay(minutes * 60_000L)
+        controller?.pause()
+        sleepTimerMinutes = null
+        sleepTimerMessage = "Playback paused by sleep timer"
+        delay(2500)
+        sleepTimerMessage = null
+    }
     // Leaving the screen restores portrait/auto rotation.
     DisposableEffect(Unit) {
         val activity = context.findActivity()
@@ -139,8 +155,39 @@ fun PlayerScreen(uri: String, title: String, onBack: () -> Unit) {
             IconButton(onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = Color.White) }
             Text(title, color = Color.White, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
         }
+        Surface(
+            modifier = Modifier.align(Alignment.BottomEnd).navigationBarsPadding().padding(16.dp),
+            color = MaterialTheme.colorScheme.surface.copy(alpha = 0.88f),
+            shape = androidx.compose.foundation.shape.RoundedCornerShape(24.dp),
+        ) {
+            TextButton(onClick = { showSleepTimer = true }) {
+                Text(if (sleepTimerMinutes == null) "Sleep timer" else "Timer: " + sleepTimerMinutes + "m")
+            }
+        }
+        sleepTimerMessage?.let {
+            Surface(modifier = Modifier.align(Alignment.BottomCenter).navigationBarsPadding().padding(bottom = 72.dp),
+                color = MaterialTheme.colorScheme.surface, shape = androidx.compose.foundation.shape.RoundedCornerShape(18.dp)) {
+                Text(it, Modifier.padding(horizontal = 16.dp, vertical = 10.dp), color = MaterialTheme.colorScheme.onSurface)
+            }
+        }
         errorText?.let {
             Text(it, Modifier.align(Alignment.Center).padding(32.dp), color = Color.White, textAlign = TextAlign.Center)
         }
+    }
+    if (showSleepTimer) {
+        AlertDialog(
+            onDismissRequest = { showSleepTimer = false },
+            title = { Text("Sleep timer") },
+            text = {
+                Column {
+                    Text("Pause playback automatically after:")
+                    listOf(5, 10, 15, 30, 45, 60).forEach { minutes ->
+                        TextButton(onClick = { sleepTimerMinutes = minutes; showSleepTimer = false }, modifier = Modifier.fillMaxWidth()) { Text(minutes.toString() + " minutes") }
+                    }
+                    if (sleepTimerMinutes != null) TextButton(onClick = { sleepTimerMinutes = null; showSleepTimer = false }, modifier = Modifier.fillMaxWidth()) { Text("Cancel active timer") }
+                }
+            },
+            confirmButton = { TextButton(onClick = { showSleepTimer = false }) { Text("Close") } },
+        )
     }
 }
