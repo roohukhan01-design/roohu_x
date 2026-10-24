@@ -22,7 +22,7 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-enum class LibSort { DATE, NAME, SIZE }
+enum class LibSort { DATE, RECENTLY_PLAYED, NAME, SIZE }
 enum class LibFilter { ALL, VIDEO, AUDIO }
 
 data class LibraryItem(
@@ -61,6 +61,11 @@ class LibraryViewModel(private val container: AppContainer) : ViewModel() {
         }.let { list ->
             when (s) {
                 LibSort.DATE -> list.sortedByDescending { it.dateMs }
+                LibSort.RECENTLY_PLAYED -> {
+                    val prefs = container.appContext.getSharedPreferences("roohux_playback_positions", Context.MODE_PRIVATE)
+                    list.sortedWith(compareByDescending<LibraryItem> { prefs.getLong("recent_${it.uri.hashCode()}", 0L) }
+                        .thenByDescending { it.dateMs })
+                }
                 LibSort.NAME -> list.sortedBy { it.title.lowercase() }
                 LibSort.SIZE -> list.sortedByDescending { it.size }
             }
