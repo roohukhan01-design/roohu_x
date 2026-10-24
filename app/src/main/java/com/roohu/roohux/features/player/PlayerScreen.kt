@@ -5,6 +5,10 @@ import android.content.pm.ActivityInfo
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.foundation.background
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.foundation.layout.*
@@ -52,6 +56,9 @@ fun PlayerScreen(uri: String, title: String, onBack: () -> Unit) {
     var audioOnly by remember { mutableStateOf(false) }
     var controlsVisible by remember { mutableStateOf(true) }
     var buffering by remember { mutableStateOf(false) }
+    var backPressed by remember { mutableStateOf(false) }
+    val backScale by animateFloatAsState(if (backPressed) 0.92f else 1f, label = "backScale")
+    LaunchedEffect(backPressed) { if (backPressed) { delay(120); backPressed = false } }
     val positionPrefs = remember(context) { context.getSharedPreferences("roohux_playback_positions", android.content.Context.MODE_PRIVATE) }
     val positionKey = remember(uri) { "position_${uri.hashCode()}" }
 
@@ -175,17 +182,46 @@ fun PlayerScreen(uri: String, title: String, onBack: () -> Unit) {
         ) {
         Row(
             Modifier.fillMaxWidth()
-                .background(Brush.verticalGradient(listOf(Color.Black.copy(alpha = 0.82f), Color.Transparent)))
+                .background(
+                    Brush.verticalGradient(
+                        listOf(
+                            Color.Black.copy(alpha = 0.88f),
+                            Color.Black.copy(alpha = 0.48f),
+                            Color.Transparent,
+                        ),
+                    ),
+                )
                 .statusBarsPadding()
-                .padding(start = 8.dp, end = 16.dp, top = 4.dp, bottom = 24.dp),
+                .padding(start = 12.dp, end = 20.dp, top = 8.dp, bottom = 36.dp),
             verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            IconButton(onClick = onBack) {
-                Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = Color.White)
+            Box(
+                Modifier
+                    .size(44.dp)
+                    .scale(backScale)
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(Color.White.copy(alpha = 0.13f)),
+                contentAlignment = Alignment.Center,
+            ) {
+                IconButton(onClick = { backPressed = true; onBack() }) {
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = Color.White)
+                }
             }
-            Column(Modifier.weight(1f)) {
-                Text("NOW PLAYING", color = Color.White.copy(alpha = 0.65f), style = MaterialTheme.typography.labelSmall)
-                Text(title, color = Color.White, maxLines = 1, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.titleMedium)
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                Text(
+                    "ROOHUX  /  NOW PLAYING",
+                    color = Color(0xFF80E7F2),
+                    style = MaterialTheme.typography.labelSmall,
+                    maxLines = 1,
+                )
+                Text(
+                    title,
+                    color = Color.White,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    style = MaterialTheme.typography.titleMedium,
+                )
             }
         }
         }
