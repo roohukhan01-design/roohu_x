@@ -132,9 +132,24 @@ private fun MediaRow(m: DetectedMedia, probe: MediaProbe?, onDownload: () -> Uni
                 MediaKind.STREAM_PLAYLIST -> "Streaming playlist (HLS/DASH)"
                 MediaKind.BLOB -> "In-page stream (blob)"
             }
-            val size = probe?.sizeBytes?.let { formatBytes(it) } ?: "size unknown"
-            Text(if (m.kind == MediaKind.DIRECT_VIDEO || m.kind == MediaKind.DIRECT_AUDIO) "$kind · $size" + (probe?.contentType?.let { " · $it" } ?: "") else kind,
+            val size = probe?.sizeBytes?.let { formatBytes(it) } ?: "Size unknown"
+            val extension = m.name.substringAfterLast('.', "").uppercase()
+            val fileType = extension.takeIf { it.lowercase() in (MediaClassifier.VIDEO_EXT + MediaClassifier.AUDIO_EXT) }
+                ?: probe?.contentType?.substringAfter('/')?.uppercase()
+                ?: "Unknown type"
+            Text(if (m.kind == MediaKind.DIRECT_VIDEO || m.kind == MediaKind.DIRECT_AUDIO) "$kind · $fileType · $size" else kind,
                 style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            if (m.kind == MediaKind.DIRECT_VIDEO) {
+                val quality = Regex("""(?i)(?:^|[^0-9])(2160|1440|1080|720|480|360|240)p?(?:[^0-9]|$)""")
+                    .find(m.name)?.groupValues?.get(1)?.let { "${it}p" }
+                Text(
+                    if (quality != null) "Resolution: $quality (filename hint)"
+                    else "Resolution: Original source (exact resolution unknown)",
+                    style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Text("The original file is saved without changing quality. Other resolutions require separate files from the website.",
+                    style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
             when (m.kind) {
                 MediaKind.DIRECT_VIDEO, MediaKind.DIRECT_AUDIO -> Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Button(onDownload) { Text("Download") }
