@@ -61,6 +61,7 @@ fun DownloadsScreen(vm: DownloadsViewModel, modifier: Modifier = Modifier) {
                 }
             }
             items(list, key = { it.id }) { d ->
+                var showDetails by remember(d.id) { mutableStateOf(false) }
                 GlassCard(Modifier.fillMaxWidth()) {
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Text(d.fileName, style = MaterialTheme.typography.titleMedium, maxLines = 2, overflow = TextOverflow.Ellipsis)
@@ -70,6 +71,38 @@ fun DownloadsScreen(vm: DownloadsViewModel, modifier: Modifier = Modifier) {
                         Text(mediaType, style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.primary)
                         StatusBlock(d)
+                        TextButton(onClick = { showDetails = !showDetails }) {
+                            Text(if (showDetails) "Hide details" else "File details")
+                        }
+                        if (showDetails) {
+                            val extension = d.fileName.substringAfterLast('.', "").uppercase().takeIf { it.isNotBlank() }
+                                ?: "Unknown"
+                            val sourceHost = runCatching {
+                                android.net.Uri.parse(d.url).host ?: "Unknown source"
+                            }.getOrDefault("Unknown source")
+                            val resolutionHint = Regex("""(?i)(?:^|[^0-9])(2160|1440|1080|720|480|360|240)p?(?:[^0-9]|$)""")
+                                .find(d.fileName)?.groupValues?.get(1)?.let { "${it}p (filename hint only)" }
+                                ?: "Not provided by the filename"
+                            HorizontalDivider()
+                            DetailLine("File size", if (d.totalBytes > 0) formatBytes(d.totalBytes) else if (d.downloadedBytes > 0) "${formatBytes(d.downloadedBytes)} downloaded; total unknown" else "Unknown")
+                            DetailLine("Format", extension)
+                            DetailLine("Content type", d.mimeType?.takeIf { it.isNotBlank() } ?: "Not provided")
+                            DetailLine("Source website", sourceHost)
+                            if (d.fileName.contains(Regex("""(?i)\.(mp4|mkv|webm|mov|avi)$"""))) {
+                                DetailLine("Resolution", resolutionHint)
+                                Text("RoohuX keeps the original file quality. A quality selector is only possible when a website exposes separate versions; this download has no verified alternate-quality list.",
+                                    style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
+                            if (d.status == DownloadStatus.DOWNLOADING || d.status == DownloadStatus.PAUSED) {
+                                DetailLine("Downloaded", formatBytes(d.downloadedBytes))
+                                DetailLine("Remaining", if (d.totalBytes > 0) formatBytes((d.totalBytes - d.downloadedBytes).coerceAtLeast(0)) else "Unknown")
+                                DetailLine("Resume support", when (d.resumable) {
+                                    1 -> "Supported"
+                                    0 -> "Not supported by server"
+                                    else -> "Not checked yet"
+                                })
+                            }
+                        }
                         FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                             when (d.status) {
                                 DownloadStatus.DOWNLOADING -> {
@@ -150,6 +183,15 @@ private fun StatusBlock(d: DownloadEntity) {
     }
 }
 
+
+@Composable
+private fun DetailLine(label: String, value: String) {
+    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        Text(label, modifier = Modifier.width(108.dp), style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(value, modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodySmall)
+    }
+}
 
 @Composable
 private fun DownloadStat(label: String, value: String, modifier: Modifier = Modifier) {
