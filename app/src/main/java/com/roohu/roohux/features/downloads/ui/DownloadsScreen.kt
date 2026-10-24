@@ -64,6 +64,11 @@ fun DownloadsScreen(vm: DownloadsViewModel, modifier: Modifier = Modifier) {
                 GlassCard(Modifier.fillMaxWidth()) {
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Text(d.fileName, style = MaterialTheme.typography.titleMedium, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                        val mediaType = d.mimeType?.takeIf { it.isNotBlank() }
+                            ?: d.fileName.substringAfterLast('.', "").uppercase().takeIf { it.isNotBlank() }?.let { ".$it file" }
+                            ?: "File type unknown"
+                        Text(mediaType, style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.primary)
                         StatusBlock(d)
                         FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                             when (d.status) {
