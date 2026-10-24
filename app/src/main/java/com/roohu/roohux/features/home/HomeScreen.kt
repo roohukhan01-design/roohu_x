@@ -16,10 +16,10 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.BookmarkBorder
-import androidx.compose.material.icons.filled.Download
-import androidx.compose.material.icons.filled.Language
-import androidx.compose.material.icons.filled.PlayCircle
+import androidx.compose.material.icons.automirrored.filled.List
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
@@ -166,12 +166,12 @@ fun HomeScreen(vm: DownloadsViewModel, browser: BrowserManager, onNavigate: (Str
             )
         }
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            QuickAction("Browser", "Explore websites", Icons.Default.Language, Modifier.weight(1f)) { onNavigate("browser") }
-            QuickAction("Downloads", "Track your files", Icons.Default.Download, Modifier.weight(1f)) { onNavigate("downloads") }
+            QuickAction("Browser", "Explore websites", Icons.Default.Search, Modifier.weight(1f)) { onNavigate("browser") }
+            QuickAction("Downloads", "Track your files", Icons.AutoMirrored.Filled.List, Modifier.weight(1f)) { onNavigate("downloads") }
         }
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            QuickAction("Library", "Play saved media", Icons.Default.PlayCircle, Modifier.weight(1f)) { onNavigate("library") }
-            QuickAction("Bookmarks", "Saved websites", Icons.Default.BookmarkBorder, Modifier.weight(1f)) { browser.pendingPanel = BrowserPanel.BOOKMARKS; onNavigate("browser") }
+            QuickAction("Library", "Play saved media", Icons.Default.PlayArrow, Modifier.weight(1f)) { onNavigate("library") }
+            QuickAction("Bookmarks", "Saved websites", Icons.Default.Home, Modifier.weight(1f)) { browser.pendingPanel = BrowserPanel.BOOKMARKS; onNavigate("browser") }
         }
 
         GlassCard(Modifier.fillMaxWidth()) {
