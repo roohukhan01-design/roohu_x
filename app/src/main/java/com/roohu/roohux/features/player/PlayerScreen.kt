@@ -79,6 +79,9 @@ fun PlayerScreen(uri: String, title: String, onBack: () -> Unit) {
     val playerThemeAccents = listOf(Color(0xFF80E7F2), Color(0xFFB69CFF), Color(0xFFE8EAF0))
     var playerThemeIndex by remember(context) { mutableIntStateOf(positionPrefs.getInt("player_theme_index", 0).coerceIn(0, 2)) }
     val playerAccent = playerThemeAccents[playerThemeIndex]
+    val aspectNames = listOf("Fit", "Fill", "Zoom")
+    val aspectModes = listOf(AspectRatioFrameLayout.RESIZE_MODE_FIT, AspectRatioFrameLayout.RESIZE_MODE_FILL, AspectRatioFrameLayout.RESIZE_MODE_ZOOM)
+    var aspectIndex by remember(context) { mutableIntStateOf(positionPrefs.getInt("player_aspect_index", 0).coerceIn(0, 2)) }
     val positionKey = remember(uri) { "position_${uri.hashCode()}" }
 
     DisposableEffect(uri) {
@@ -170,7 +173,7 @@ fun PlayerScreen(uri: String, title: String, onBack: () -> Unit) {
                     setControllerVisibilityListener(PlayerView.ControllerVisibilityListener { visibility ->
                         controlsVisible = visibility == android.view.View.VISIBLE
                     })
-                    resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
+                    resizeMode = aspectModes[aspectIndex]
                     keepScreenOn = true
                     setShowBuffering(PlayerView.SHOW_BUFFERING_NEVER)
                     setShutterBackgroundColor(android.graphics.Color.BLACK)
@@ -183,6 +186,7 @@ fun PlayerScreen(uri: String, title: String, onBack: () -> Unit) {
             update = { view ->
                 view.player = controller
                 view.useController = !screenLocked
+                view.resizeMode = aspectModes[aspectIndex]
             },
             onRelease = { view -> view.player = null },
         )
@@ -267,6 +271,21 @@ fun PlayerScreen(uri: String, title: String, onBack: () -> Unit) {
                 ),
             ) {
                 Text("Theme", style = MaterialTheme.typography.labelSmall, maxLines = 1)
+            }
+            TextButton(
+                onClick = {
+                    aspectIndex = (aspectIndex + 1) % aspectNames.size
+                    positionPrefs.edit().putInt("player_aspect_index", aspectIndex).apply()
+                    seekNotice = aspectNames[aspectIndex] + " view"
+                    seekNoticeVersion++
+                },
+                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
+                colors = ButtonDefaults.textButtonColors(
+                    containerColor = Color.White.copy(alpha = 0.12f),
+                    contentColor = Color.White,
+                ),
+            ) {
+                Text(aspectNames[aspectIndex], style = MaterialTheme.typography.labelSmall, maxLines = 1)
             }
             TextButton(
                 onClick = { screenLocked = true },
