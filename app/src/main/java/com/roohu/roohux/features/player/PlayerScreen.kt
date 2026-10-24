@@ -61,7 +61,7 @@ fun PlayerScreen(uri: String, title: String, onBack: () -> Unit) {
             }
 
             override fun onPlaybackStateChanged(playbackState: Int) {
-                if (playbackState == Player.STATE_ENDED) positionPrefs.edit().remove(positionKey).apply()
+                if (playbackState == Player.STATE_ENDED) positionPrefs.edit().remove(positionKey).remove("recent_${uri.hashCode()}").apply()
             }
         }
         future.addListener({
@@ -78,6 +78,7 @@ fun PlayerScreen(uri: String, title: String, onBack: () -> Unit) {
                 // Restore the last saved position before playback starts.
                 val savedPosition = positionPrefs.getLong(positionKey, 0L)
                 if (savedPosition > 0L) c.seekTo(savedPosition)
+                positionPrefs.edit().putLong("recent_${uri.hashCode()}", System.currentTimeMillis()).apply()
                 c.prepare()
                 c.playWhenReady = true
                 controller = c
