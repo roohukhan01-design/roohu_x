@@ -59,6 +59,14 @@ fun PlayerScreen(uri: String, title: String, onBack: () -> Unit) {
     var controlsVisible by remember { mutableStateOf(true) }
     var buffering by remember { mutableStateOf(false) }
     var playing by remember { mutableStateOf(false) }
+    var seekNotice by remember { mutableStateOf<String?>(null) }
+    var seekNoticeVersion by remember { mutableIntStateOf(0) }
+    LaunchedEffect(seekNoticeVersion) {
+        if (seekNoticeVersion > 0) {
+            delay(800)
+            seekNotice = null
+        }
+    }
     var backPressed by remember { mutableStateOf(false) }
     val backScale by animateFloatAsState(if (backPressed) 0.92f else 1f, label = "backScale")
     LaunchedEffect(backPressed) { if (backPressed) { delay(120); backPressed = false } }
@@ -237,11 +245,17 @@ fun PlayerScreen(uri: String, title: String, onBack: () -> Unit) {
                             onClick = {
                                 controller?.let { player ->
                                     when (index) {
-                                        0 -> player.seekTo((player.currentPosition - 10_000L).coerceAtLeast(0L))
+                                        0 -> {
+                                            player.seekTo((player.currentPosition - 10_000L).coerceAtLeast(0L))
+                                            seekNotice = "−10 seconds"
+                                            seekNoticeVersion++
+                                        }
                                         1 -> if (player.isPlaying) player.pause() else player.play()
                                         else -> {
                                             val end = player.duration.takeIf { it > 0L } ?: Long.MAX_VALUE
                                             player.seekTo((player.currentPosition + 10_000L).coerceAtMost(end))
+                                            seekNotice = "+10 seconds"
+                                            seekNoticeVersion++
                                         }
                                     }
                                 }
@@ -262,6 +276,22 @@ fun PlayerScreen(uri: String, title: String, onBack: () -> Unit) {
                 }
             }
         }
+        }
+        AnimatedVisibility(
+            visible = seekNotice != null && errorText == null,
+            enter = fadeIn(animationSpec = androidx.compose.animation.core.tween(160)),
+            exit = fadeOut(animationSpec = androidx.compose.animation.core.tween(200)),
+            modifier = Modifier.align(Alignment.Center),
+        ) {
+            Text(
+                seekNotice.orEmpty(),
+                modifier = Modifier
+                    .clip(RoundedCornerShape(18.dp))
+                    .background(Color.Black.copy(alpha = 0.74f))
+                    .padding(horizontal = 22.dp, vertical = 14.dp),
+                color = Color.White,
+                style = MaterialTheme.typography.titleMedium,
+            )
         }
         errorText?.let {
             Text(it, Modifier.align(Alignment.Center).padding(32.dp), color = Color.White, textAlign = TextAlign.Center)
