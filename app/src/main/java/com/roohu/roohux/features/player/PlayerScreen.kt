@@ -11,6 +11,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
@@ -62,6 +63,7 @@ fun PlayerScreen(uri: String, title: String, onBack: () -> Unit) {
     var controlsVisible by remember { mutableStateOf(true) }
     var buffering by remember { mutableStateOf(false) }
     var playing by remember { mutableStateOf(false) }
+    var screenLocked by remember { mutableStateOf(false) }
     var seekNotice by remember { mutableStateOf<String?>(null) }
     var seekNoticeVersion by remember { mutableIntStateOf(0) }
     LaunchedEffect(seekNoticeVersion) {
@@ -175,7 +177,10 @@ fun PlayerScreen(uri: String, title: String, onBack: () -> Unit) {
                     }
                 }
             },
-            update = { view -> view.player = controller },
+            update = { view ->
+                view.player = controller
+                view.useController = !screenLocked
+            },
             onRelease = { view -> view.player = null },
         )
         AnimatedVisibility(
@@ -192,7 +197,7 @@ fun PlayerScreen(uri: String, title: String, onBack: () -> Unit) {
             )
         }
         AnimatedVisibility(
-            visible = controlsVisible,
+            visible = controlsVisible && !screenLocked,
             enter = fadeIn(animationSpec = androidx.compose.animation.core.tween(220)),
             exit = fadeOut(animationSpec = androidx.compose.animation.core.tween(180)),
             modifier = Modifier.align(Alignment.TopCenter),
@@ -244,6 +249,15 @@ fun PlayerScreen(uri: String, title: String, onBack: () -> Unit) {
                     overflow = TextOverflow.Ellipsis,
                     style = MaterialTheme.typography.titleMedium,
                 )
+            }
+            TextButton(
+                onClick = { screenLocked = true },
+                colors = ButtonDefaults.textButtonColors(
+                    containerColor = Color.White.copy(alpha = 0.12f),
+                    contentColor = Color.White,
+                ),
+            ) {
+                Text("Lock", style = MaterialTheme.typography.labelSmall, maxLines = 1)
             }
             if (landscape) {
                 TextButton(
@@ -298,6 +312,26 @@ fun PlayerScreen(uri: String, title: String, onBack: () -> Unit) {
                 }
             }
         }
+        }
+        if (screenLocked) {
+            Box(
+                Modifier.fillMaxSize().background(Color.Transparent),
+                contentAlignment = Alignment.TopCenter,
+            ) {
+                TextButton(
+                    onClick = { screenLocked = false },
+                    modifier = Modifier
+                        .statusBarsPadding()
+                        .padding(top = 12.dp)
+                        .clip(RoundedCornerShape(16.dp)),
+                    colors = ButtonDefaults.textButtonColors(
+                        containerColor = Color.Black.copy(alpha = 0.72f),
+                        contentColor = Color.White,
+                    ),
+                ) {
+                    Text("🔒 Unlock controls", style = MaterialTheme.typography.labelMedium)
+                }
+            }
         }
         AnimatedVisibility(
             visible = seekNotice != null && errorText == null,
