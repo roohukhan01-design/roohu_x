@@ -61,7 +61,7 @@ fun PlayerScreen(uri: String, title: String, onBack: () -> Unit) {
             }
 
             override fun onPlaybackStateChanged(playbackState: Int) {
-                if (playbackState == Player.STATE_ENDED) positionPrefs.edit().remove(positionKey).remove("recent_${uri.hashCode()}").apply()
+                if (playbackState == Player.STATE_ENDED) positionPrefs.edit().remove(positionKey).apply()
             }
         }
         future.addListener({
