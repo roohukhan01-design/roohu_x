@@ -49,12 +49,29 @@ fun LibraryScreen(vm: LibraryViewModel, onPlay: (uri: String, title: String) -> 
             LibFilter.entries.forEach { f -> FilterChip(filter == f, { vm.filter.value = f }, { Text(f.name.lowercase().replaceFirstChar { it.uppercase() }) }) }
             FilterChip(favOnly, { vm.favoritesOnly.value = !favOnly }, { Text("Favorites") })
         }
+        val list = items
+        if (list != null) {
+            val videos = list.count { it.isVideo }
+            val audio = list.size - videos
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                AssistChip(onClick = { vm.filter.value = LibFilter.ALL; vm.favoritesOnly.value = false }, label = { Text(list.size.toString() + " saved") })
+                AssistChip(onClick = { vm.filter.value = LibFilter.VIDEO; vm.favoritesOnly.value = false }, label = { Text(videos.toString() + " videos") })
+                AssistChip(onClick = { vm.filter.value = LibFilter.AUDIO; vm.favoritesOnly.value = false }, label = { Text(audio.toString() + " audio") })
+            }
+        }
         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.Center) {
             Text("Sort:", Modifier.align(Alignment.CenterVertically), color = MaterialTheme.colorScheme.onSurfaceVariant)
-            LibSort.entries.forEach { s -> FilterChip(sort == s, { vm.sort.value = s }, { Text(s.name.lowercase().replaceFirstChar { it.uppercase() }) }) }
+            LibSort.entries.forEach { s ->
+                val label = when (s) {
+                    LibSort.DATE -> "Recently added"
+                    LibSort.RECENTLY_PLAYED -> "Recently played"
+                    LibSort.NAME -> "Name"
+                    LibSort.SIZE -> "File size"
+                }
+                FilterChip(sort == s, { vm.sort.value = s }, { Text(label) })
+            }
         }
 
-        val list = items
         when {
             list == null -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { PulsingDots() }
             list.isEmpty() -> Box(Modifier.fillMaxSize().padding(24.dp), contentAlignment = Alignment.Center) {
