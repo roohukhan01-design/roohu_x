@@ -41,6 +41,25 @@ fun DownloadsScreen(vm: DownloadsViewModel, modifier: Modifier = Modifier) {
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
+            item(key = "download_center_summary") {
+                val active = list.count { it.status == DownloadStatus.DOWNLOADING || it.status == DownloadStatus.QUEUED }
+                val completed = list.count { it.status == DownloadStatus.COMPLETED }
+                val downloaded = list.filter { it.status == DownloadStatus.COMPLETED }.sumOf { it.downloadedBytes }
+                GlassCard(Modifier.fillMaxWidth()) {
+                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                        Text("ROOHUX DOWNLOAD CENTER", style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.primary)
+                        Text("Your media, organized.", style = MaterialTheme.typography.headlineSmall)
+                        Text("Track active transfers, review completed files, and manage your queue from one place.",
+                            style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            DownloadStat("Active", active.toString(), Modifier.weight(1f))
+                            DownloadStat("Completed", completed.toString(), Modifier.weight(1f))
+                            DownloadStat("Saved", formatBytes(downloaded), Modifier.weight(1f))
+                        }
+                    }
+                }
+            }
             items(list, key = { it.id }) { d ->
                 GlassCard(Modifier.fillMaxWidth()) {
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -122,6 +141,21 @@ private fun StatusBlock(d: DownloadEntity) {
             Text(d.error?.userMessage ?: "Download failed.", color = MaterialTheme.colorScheme.error)
             d.errorDetail?.let { Text("Details: $it", color = sub, style = MaterialTheme.typography.bodySmall) }
             if (d.resumable == 1 && d.downloadedBytes > 0) Text("Retry will continue from ${formatBytes(d.downloadedBytes)}.", color = sub, style = MaterialTheme.typography.bodySmall)
+        }
+    }
+}
+
+
+@Composable
+private fun DownloadStat(label: String, value: String, modifier: Modifier = Modifier) {
+    Surface(
+        modifier = modifier,
+        shape = MaterialTheme.shapes.medium,
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.65f),
+    ) {
+        Column(Modifier.padding(horizontal = 10.dp, vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Text(value, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }
