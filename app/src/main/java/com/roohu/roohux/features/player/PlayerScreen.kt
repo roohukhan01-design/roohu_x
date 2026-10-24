@@ -39,6 +39,7 @@ import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
+import androidx.media3.common.PlaybackParameters
 import androidx.media3.common.Tracks
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
@@ -79,6 +80,8 @@ fun PlayerScreen(uri: String, title: String, onBack: () -> Unit) {
     val playerThemeAccents = listOf(Color(0xFF80E7F2), Color(0xFFB69CFF), Color(0xFFE8EAF0))
     var playerThemeIndex by remember(context) { mutableIntStateOf(positionPrefs.getInt("player_theme_index", 0).coerceIn(0, 2)) }
     val playerAccent = playerThemeAccents[playerThemeIndex]
+    val speedOptions = listOf(0.75f, 1.0f, 1.25f, 1.5f, 2.0f)
+    var speedIndex by remember(context) { mutableIntStateOf(positionPrefs.getInt("player_speed_index", 1).coerceIn(0, speedOptions.lastIndex)) }
     val aspectNames = listOf("Fit", "Fill", "Zoom")
     val aspectModes = listOf(AspectRatioFrameLayout.RESIZE_MODE_FIT, AspectRatioFrameLayout.RESIZE_MODE_FILL, AspectRatioFrameLayout.RESIZE_MODE_ZOOM)
     var aspectIndex by remember(context) { mutableIntStateOf(positionPrefs.getInt("player_aspect_index", 0).coerceIn(0, 2)) }
@@ -123,6 +126,7 @@ fun PlayerScreen(uri: String, title: String, onBack: () -> Unit) {
                 if (savedPosition > 0L) c.seekTo(savedPosition)
                 positionPrefs.edit().putLong("recent_${uri.hashCode()}", System.currentTimeMillis()).apply()
                 c.prepare()
+                c.playbackParameters = PlaybackParameters(speedOptions[speedIndex])
                 c.playWhenReady = true
                 controller = c
             } catch (e: Exception) {
@@ -286,6 +290,22 @@ fun PlayerScreen(uri: String, title: String, onBack: () -> Unit) {
                 ),
             ) {
                 Text(aspectNames[aspectIndex], style = MaterialTheme.typography.labelSmall, maxLines = 1)
+            }
+            TextButton(
+                onClick = {
+                    speedIndex = (speedIndex + 1) % speedOptions.size
+                    positionPrefs.edit().putInt("player_speed_index", speedIndex).apply()
+                    controller?.playbackParameters = PlaybackParameters(speedOptions[speedIndex])
+                    seekNotice = "${speedOptions[speedIndex]}× speed"
+                    seekNoticeVersion++
+                },
+                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
+                colors = ButtonDefaults.textButtonColors(
+                    containerColor = playerAccent.copy(alpha = 0.16f),
+                    contentColor = playerAccent,
+                ),
+            ) {
+                Text("${speedOptions[speedIndex]}×", style = MaterialTheme.typography.labelSmall, maxLines = 1)
             }
             TextButton(
                 onClick = { screenLocked = true },
