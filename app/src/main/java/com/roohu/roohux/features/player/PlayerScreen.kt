@@ -10,6 +10,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
@@ -59,6 +62,11 @@ fun PlayerScreen(uri: String, title: String, onBack: () -> Unit) {
     var controlsVisible by remember { mutableStateOf(true) }
     var buffering by remember { mutableStateOf(false) }
     var playing by remember { mutableStateOf(false) }
+    var seekFeedback by remember { mutableStateOf<String?>(null) }
+    var seekFeedbackCount by remember { mutableIntStateOf(0) }
+    LaunchedEffect(seekFeedbackCount) {
+        if (seekFeedbackCount > 0) { delay(650); seekFeedback = null }
+    }
     var backPressed by remember { mutableStateOf(false) }
     val backScale by animateFloatAsState(if (backPressed) 0.92f else 1f, label = "backScale")
     LaunchedEffect(backPressed) { if (backPressed) { delay(120); backPressed = false } }
@@ -167,6 +175,75 @@ fun PlayerScreen(uri: String, title: String, onBack: () -> Unit) {
             update = { view -> view.player = controller },
             onRelease = { view -> view.player = null },
         )
+        // Edge-only gesture zones keep the middle of Media3 PlayerView touchable.
+        // Single taps are deliberately not consumed, so native controller toggling still works.
+        if (!audioOnly && controller != null) {
+            Row(Modifier.fillMaxWidth().fillMaxHeight(0.7f).align(Alignment.Center)) {
+                Box(
+                    Modifier
+                        .fillMaxHeight(0.42f)
+                        .weight(1f)
+                        .pointerInput(controller) {
+                            detectTapGestures(onDoubleTap = {
+                                controller?.let { player ->
+                                    player.seekTo((player.currentPosition - 10_000L).coerceAtLeast(0L))
+                                    seekFeedback = "−10s"
+                                    seekFeedbackCount++
+                                }
+                            })
+                        },
+                    contentAlignment = Alignment.CenterStart,
+                ) {
+                    AnimatedVisibility(
+                        visible = seekFeedback == "−10s",
+                        enter = fadeIn(),
+                        exit = fadeOut(),
+                    ) {
+                        Text(
+                            "↶ 10s",
+                            Modifier.padding(start = 28.dp)
+                                .clip(RoundedCornerShape(18.dp))
+                                .background(Color.Black.copy(alpha = 0.55f))
+                                .padding(horizontal = 18.dp, vertical = 12.dp),
+                            color = Color.White,
+                            style = MaterialTheme.typography.titleMedium,
+                        )
+                    }
+                }
+                Box(
+                    Modifier
+                        .fillMaxHeight(0.42f)
+                        .weight(1f)
+                        .pointerInput(controller) {
+                            detectTapGestures(onDoubleTap = {
+                                controller?.let { player ->
+                                    val end = player.duration.takeIf { it > 0L } ?: Long.MAX_VALUE
+                                    player.seekTo((player.currentPosition + 10_000L).coerceAtMost(end))
+                                    seekFeedback = "+10s"
+                                    seekFeedbackCount++
+                                }
+                            })
+                        },
+                    contentAlignment = Alignment.CenterEnd,
+                ) {
+                    AnimatedVisibility(
+                        visible = seekFeedback == "+10s",
+                        enter = fadeIn(),
+                        exit = fadeOut(),
+                    ) {
+                        Text(
+                            "10s ↷",
+                            Modifier.padding(end = 28.dp)
+                                .clip(RoundedCornerShape(18.dp))
+                                .background(Color.Black.copy(alpha = 0.55f))
+                                .padding(horizontal = 18.dp, vertical = 12.dp),
+                            color = Color.White,
+                            style = MaterialTheme.typography.titleMedium,
+                        )
+                    }
+                }
+            }
+        }
         AnimatedVisibility(
             visible = buffering && errorText == null && !audioOnly,
             enter = fadeIn(animationSpec = androidx.compose.animation.core.tween(200)),
