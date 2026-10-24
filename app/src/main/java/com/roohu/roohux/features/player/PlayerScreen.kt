@@ -75,6 +75,10 @@ fun PlayerScreen(uri: String, title: String, onBack: () -> Unit) {
     val backScale by animateFloatAsState(if (backPressed) 0.92f else 1f, label = "backScale")
     LaunchedEffect(backPressed) { if (backPressed) { delay(120); backPressed = false } }
     val positionPrefs = remember(context) { context.getSharedPreferences("roohux_playback_positions", android.content.Context.MODE_PRIVATE) }
+    val playerThemeNames = listOf("Midnight", "Aurora", "Minimal")
+    val playerThemeAccents = listOf(Color(0xFF80E7F2), Color(0xFFB69CFF), Color(0xFFE8EAF0))
+    var playerThemeIndex by remember(context) { mutableIntStateOf(positionPrefs.getInt("player_theme_index", 0).coerceIn(0, 2)) }
+    val playerAccent = playerThemeAccents[playerThemeIndex]
     val positionKey = remember(uri) { "position_${uri.hashCode()}" }
 
     DisposableEffect(uri) {
@@ -237,7 +241,7 @@ fun PlayerScreen(uri: String, title: String, onBack: () -> Unit) {
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
                 if (!landscape) Text(
                     "ROOHUX  /  NOW PLAYING",
-                    color = Color(0xFF80E7F2),
+                    color = playerAccent,
                     style = MaterialTheme.typography.labelSmall,
                     maxLines = 1,
                 )
@@ -248,6 +252,21 @@ fun PlayerScreen(uri: String, title: String, onBack: () -> Unit) {
                     overflow = TextOverflow.Ellipsis,
                     style = MaterialTheme.typography.titleMedium,
                 )
+            }
+            TextButton(
+                onClick = {
+                    playerThemeIndex = (playerThemeIndex + 1) % playerThemeNames.size
+                    positionPrefs.edit().putInt("player_theme_index", playerThemeIndex).apply()
+                    seekNotice = playerThemeNames[playerThemeIndex] + " theme"
+                    seekNoticeVersion++
+                },
+                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
+                colors = ButtonDefaults.textButtonColors(
+                    containerColor = playerAccent.copy(alpha = 0.18f),
+                    contentColor = playerAccent,
+                ),
+            ) {
+                Text("Theme", style = MaterialTheme.typography.labelSmall, maxLines = 1)
             }
             TextButton(
                 onClick = { screenLocked = true },
@@ -300,7 +319,7 @@ fun PlayerScreen(uri: String, title: String, onBack: () -> Unit) {
                                 .clip(RoundedCornerShape(14.dp)),
                             contentPadding = PaddingValues(0.dp),
                             colors = ButtonDefaults.textButtonColors(
-                                containerColor = if (index == 1) Color(0xFF80E7F2).copy(alpha = 0.22f)
+                                containerColor = if (index == 1) playerAccent.copy(alpha = 0.22f)
                                     else Color.White.copy(alpha = 0.12f),
                                 contentColor = Color.White,
                             ),
