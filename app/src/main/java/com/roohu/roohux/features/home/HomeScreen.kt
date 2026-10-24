@@ -79,15 +79,56 @@ fun HomeScreen(vm: DownloadsViewModel, browser: BrowserManager, onNavigate: (Str
         }
     }
 
-    Column(modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+    Column(modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp, vertical = 14.dp), verticalArrangement = Arrangement.spacedBy(18.dp)) {
         Box(
-            Modifier.fillMaxWidth().height(180.dp).clip(RoundedCornerShape(28.dp))
-                .background(Brush.linearGradient(listOf(Violet.copy(alpha = 0.35f), Cyan.copy(alpha = 0.12f), Color.Transparent))),
+            Modifier.fillMaxWidth().height(204.dp).clip(RoundedCornerShape(30.dp))
+                .background(
+                    Brush.linearGradient(
+                        listOf(
+                            Violet.copy(alpha = 0.34f),
+                            Color(0xFF17264A).copy(alpha = 0.92f),
+                            Cyan.copy(alpha = 0.12f),
+                        ),
+                    ),
+                ),
         ) {
-            HoloOrb(Modifier.align(Alignment.CenterEnd).size(180.dp))
-            Column(Modifier.align(Alignment.CenterStart).padding(24.dp)) {
-                Text("RoohuX", style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Bold)
-                Text("$greeting. Browse, detect, download, play.", color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.fillMaxWidth(0.6f))
+            HoloOrb(Modifier.align(Alignment.CenterEnd).size(190.dp))
+            Box(
+                Modifier.align(Alignment.TopStart).padding(start = 20.dp, top = 18.dp)
+                    .clip(RoundedCornerShape(50)).background(Color.White.copy(alpha = 0.10f))
+                    .padding(horizontal = 10.dp, vertical = 6.dp),
+            ) {
+                Text(
+                    "PERSONAL MEDIA HUB",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = Cyan,
+                    fontWeight = FontWeight.SemiBold,
+                )
+            }
+            Column(
+                Modifier.align(Alignment.CenterStart).padding(start = 22.dp, end = 10.dp, top = 24.dp),
+                verticalArrangement = Arrangement.spacedBy(7.dp),
+            ) {
+                Text(
+                    "Your media.\nYour universe.",
+                    style = MaterialTheme.typography.headlineMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White,
+                    lineHeight = MaterialTheme.typography.headlineMedium.lineHeight,
+                )
+                Text(
+                    "$greeting. Find it, save it, enjoy it.",
+                    color = Color.White.copy(alpha = 0.78f),
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.fillMaxWidth(0.66f),
+                )
+            }
+            Box(
+                Modifier.align(Alignment.BottomStart).padding(start = 22.dp, bottom = 14.dp)
+                    .clip(RoundedCornerShape(50)).background(Color.Black.copy(alpha = 0.18f))
+                    .padding(horizontal = 10.dp, vertical = 5.dp),
+            ) {
+                Text("BROWSE  •  DOWNLOAD  •  PLAY", style = MaterialTheme.typography.labelSmall, color = Color.White.copy(alpha = 0.86f))
             }
         }
 
@@ -95,9 +136,9 @@ fun HomeScreen(vm: DownloadsViewModel, browser: BrowserManager, onNavigate: (Str
             value = input,
             onValueChange = { input = it; error = null },
             modifier = Modifier.fillMaxWidth(),
-            label = { Text("Search, paste a URL or a file link") },
+            label = { Text("What do you want to open?") },
             isError = error != null,
-            supportingText = { Text(error ?: "“Open” searches or loads a site. “Download” takes a direct http/https file link.") },
+            supportingText = { Text(error ?: "Paste a website or direct media link. Open to browse, Download for a file link.") },
             singleLine = true,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri, imeAction = ImeAction.Go),
             keyboardActions = KeyboardActions(onGo = { openBrowser() }),
