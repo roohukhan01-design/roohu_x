@@ -64,7 +64,8 @@ fun PlayerScreen(uri: String, title: String, onBack: () -> Unit) {
             }
 
             override fun onTracksChanged(tracks: Tracks) {
-                audioOnly = tracks.groups.isNotEmpty() && !tracks.isTypeSelected(C.TRACK_TYPE_VIDEO)
+                audioOnly = tracks.groups.isNotEmpty() && tracks.isTypeSelected(C.TRACK_TYPE_AUDIO) && !tracks.isTypeSelected(C.TRACK_TYPE_VIDEO)
+                if (!audioOnly) { sleepTimerMinutes = null; showSleepTimer = false }
             }
 
             override fun onPlaybackStateChanged(playbackState: Int) {
@@ -155,7 +156,7 @@ fun PlayerScreen(uri: String, title: String, onBack: () -> Unit) {
             IconButton(onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = Color.White) }
             Text(title, color = Color.White, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
         }
-        Surface(
+        if (audioOnly) Surface(
             modifier = Modifier.align(Alignment.BottomEnd).navigationBarsPadding().padding(16.dp),
             color = MaterialTheme.colorScheme.surface.copy(alpha = 0.88f),
             shape = androidx.compose.foundation.shape.RoundedCornerShape(24.dp),
@@ -174,7 +175,7 @@ fun PlayerScreen(uri: String, title: String, onBack: () -> Unit) {
             Text(it, Modifier.align(Alignment.Center).padding(32.dp), color = Color.White, textAlign = TextAlign.Center)
         }
     }
-    if (showSleepTimer) {
+    if (showSleepTimer && audioOnly) {
         AlertDialog(
             onDismissRequest = { showSleepTimer = false },
             title = { Text("Sleep timer") },
