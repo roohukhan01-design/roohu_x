@@ -210,10 +210,30 @@ fun HomeScreen(vm: DownloadsViewModel, browser: BrowserManager, onNavigate: (Str
             }
             if (history.isEmpty()) Text("Nothing yet. Visited sites appear here; you can clear them any time.", color = MaterialTheme.colorScheme.onSurfaceVariant)
             history.take(5).forEach { h ->
-                Text(
-                    h.title, Modifier.fillMaxWidth().clickable { browser.go(h.url); onNavigate("browser") }.padding(vertical = 6.dp),
-                    maxLines = 1, overflow = TextOverflow.Ellipsis,
-                )
+                Surface(
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 3.dp)
+                        .clickable { browser.go(h.url); onNavigate("browser") },
+                    shape = RoundedCornerShape(16.dp),
+                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.30f),
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 11.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(11.dp),
+                    ) {
+                        Box(
+                            Modifier.size(38.dp).clip(RoundedCornerShape(12.dp))
+                                .background(Brush.linearGradient(listOf(Violet.copy(alpha = 0.20f), Cyan.copy(alpha = 0.14f)))),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Icon(Icons.Default.Search, contentDescription = null, tint = Cyan, modifier = Modifier.size(20.dp))
+                        }
+                        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                            Text(h.title, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                            Text(h.url, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        }
+                    }
+                }
             }
         }
     }
