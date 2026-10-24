@@ -175,14 +175,32 @@ fun HomeScreen(vm: DownloadsViewModel, browser: BrowserManager, onNavigate: (Str
         }
 
         GlassCard(Modifier.fillMaxWidth()) {
-            Text("Downloads", style = MaterialTheme.typography.titleMedium)
-            val active = list.filter { it.status == DownloadStatus.DOWNLOADING || it.status == DownloadStatus.QUEUED }
-            Row(Modifier.fillMaxWidth().padding(vertical = 8.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-                Stat("Active", active.size)
-                Stat("Done", list.count { it.status == DownloadStatus.COMPLETED })
-                Stat("Failed", list.count { it.status == DownloadStatus.FAILED })
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                    Text("Your downloads", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                    Text("A quick status overview", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+                TextButton(onClick = { onNavigate("downloads") }) { Text("View all") }
             }
-            active.take(3).forEach { ActiveRow(it) }
+            val active = list.filter { it.status == DownloadStatus.DOWNLOADING || it.status == DownloadStatus.QUEUED }
+            Row(
+                Modifier.fillMaxWidth().padding(vertical = 12.dp),
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                Stat("Active", active.size, Modifier.weight(1f))
+                Stat("Completed", list.count { it.status == DownloadStatus.COMPLETED }, Modifier.weight(1f))
+                Stat("Failed", list.count { it.status == DownloadStatus.FAILED }, Modifier.weight(1f))
+            }
+            if (active.isEmpty()) {
+                Text(
+                    "Nothing downloading right now.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(top = 2.dp),
+                )
+            } else {
+                active.take(3).forEach { ActiveRow(it) }
+            }
         }
 
         GlassCard(Modifier.fillMaxWidth()) {
@@ -231,10 +249,22 @@ private fun QuickAction(
 }
 
 @Composable
-private fun Stat(label: String, value: Int) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Text("$value", style = MaterialTheme.typography.headlineMedium)
-        Text(label, color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
+private fun Stat(label: String, value: Int, modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier.clip(RoundedCornerShape(16.dp))
+            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.42f))
+            .padding(horizontal = 6.dp, vertical = 12.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(3.dp),
+    ) {
+        Text("$value", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+        Text(
+            label,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            style = MaterialTheme.typography.labelSmall,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
     }
 }
 
