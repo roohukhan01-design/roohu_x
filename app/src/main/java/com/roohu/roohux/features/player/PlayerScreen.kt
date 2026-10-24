@@ -10,6 +10,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
+import kotlinx.coroutines.delay
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -42,6 +43,8 @@ fun PlayerScreen(uri: String, title: String, onBack: () -> Unit) {
     var controller by remember { mutableStateOf<MediaController?>(null) }
     var errorText by remember { mutableStateOf<String?>(null) }
     var audioOnly by remember { mutableStateOf(false) }
+    val positionPrefs = remember(context) { context.getSharedPreferences("roohux_playback_positions", android.content.Context.MODE_PRIVATE) }
+    val positionKey = remember(uri) { "position_${uri.hashCode()}" }
 
     DisposableEffect(uri) {
         errorText = null
@@ -56,6 +59,10 @@ fun PlayerScreen(uri: String, title: String, onBack: () -> Unit) {
             override fun onTracksChanged(tracks: Tracks) {
                 audioOnly = tracks.groups.isNotEmpty() && !tracks.isTypeSelected(C.TRACK_TYPE_VIDEO)
             }
+
+            override fun onPlaybackStateChanged(playbackState: Int) {
+                if (playbackState == Player.STATE_ENDED) positionPrefs.edit().remove(positionKey).apply()
+            }
         }
         future.addListener({
             try {
@@ -68,6 +75,9 @@ fun PlayerScreen(uri: String, title: String, onBack: () -> Unit) {
                         .setMediaMetadata(MediaMetadata.Builder().setTitle(title).build())
                         .build(),
                 )
+                // Restore the last saved position before playback starts.
+                val savedPosition = positionPrefs.getLong(positionKey, 0L)
+                if (savedPosition > 0L) c.seekTo(savedPosition)
                 c.prepare()
                 c.playWhenReady = true
                 controller = c
@@ -78,10 +88,25 @@ fun PlayerScreen(uri: String, title: String, onBack: () -> Unit) {
         onDispose {
             attached?.let { c ->
                 c.removeListener(listener)
+                // Save the current position when leaving the player. Keep audio playback in background.
+                if (c.currentPosition > 0L && c.playbackState != Player.STATE_ENDED) {
+                    positionPrefs.edit().putLong(positionKey, c.currentPosition).apply()
+                }
                 if (c.currentTracks.isTypeSelected(C.TRACK_TYPE_VIDEO)) c.pause() // video doesn't continue in the background
             }
             controller = null
             MediaController.releaseFuture(future)
+        }
+    }
+
+    // Save progress periodically so it survives app closure, not only screen navigation.
+    LaunchedEffect(controller, uri) {
+        val c = controller ?: return@LaunchedEffect
+        while (true) {
+            if (c.currentMediaItem != null && c.currentPosition > 0L && c.playbackState != Player.STATE_ENDED) {
+                positionPrefs.edit().putLong(positionKey, c.currentPosition).apply()
+            }
+            delay(2_000)
         }
     }
 
