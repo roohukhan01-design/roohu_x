@@ -11,7 +11,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
@@ -322,15 +321,26 @@ fun PlayerScreen(uri: String, title: String, onBack: () -> Unit) {
                     onClick = { screenLocked = false },
                     modifier = Modifier
                         .statusBarsPadding()
-                        .padding(top = 12.dp)
-                        .clip(RoundedCornerShape(16.dp)),
+                        .padding(top = if (landscape) 8.dp else 12.dp)
+                        .clip(RoundedCornerShape(18.dp)),
                     colors = ButtonDefaults.textButtonColors(
-                        containerColor = Color.Black.copy(alpha = 0.72f),
+                        containerColor = Color.Black.copy(alpha = 0.78f),
                         contentColor = Color.White,
                     ),
                 ) {
-                    Text("🔒 Unlock controls", style = MaterialTheme.typography.labelMedium)
+                    Text("🔒  Unlock controls", style = MaterialTheme.typography.labelMedium)
                 }
+                Text(
+                    "SCREEN LOCKED",
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(bottom = if (landscape) 18.dp else 28.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(Color.Black.copy(alpha = 0.58f))
+                        .padding(horizontal = 14.dp, vertical = 8.dp),
+                    color = Color.White.copy(alpha = 0.82f),
+                    style = MaterialTheme.typography.labelSmall,
+                )
             }
         }
         AnimatedVisibility(
