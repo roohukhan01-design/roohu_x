@@ -15,6 +15,11 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.BookmarkBorder
+import androidx.compose.material.icons.filled.Download
+import androidx.compose.material.icons.filled.Language
+import androidx.compose.material.icons.filled.PlayCircle
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
@@ -148,13 +153,25 @@ fun HomeScreen(vm: DownloadsViewModel, browser: BrowserManager, onNavigate: (Str
             OutlinedButton(onClick = { onDownloadClicked() }, modifier = Modifier.weight(1f)) { Text("Download") }
         }
 
-        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            QuickAction("Browser", "Tabs, bookmarks, media detection", Modifier.weight(1f)) { onNavigate("browser") }
-            QuickAction("Downloads", "Progress and history", Modifier.weight(1f)) { onNavigate("downloads") }
+        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Text(
+                "Quick access",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.SemiBold,
+            )
+            Text(
+                "Everything you need, one tap away.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
         }
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            QuickAction("Library", "Offline video and audio", Modifier.weight(1f)) { onNavigate("library") }
-            QuickAction("Bookmarks", "Your saved sites", Modifier.weight(1f)) { browser.pendingPanel = BrowserPanel.BOOKMARKS; onNavigate("browser") }
+            QuickAction("Browser", "Explore websites", Icons.Default.Language, Modifier.weight(1f)) { onNavigate("browser") }
+            QuickAction("Downloads", "Track your files", Icons.Default.Download, Modifier.weight(1f)) { onNavigate("downloads") }
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            QuickAction("Library", "Play saved media", Icons.Default.PlayCircle, Modifier.weight(1f)) { onNavigate("library") }
+            QuickAction("Bookmarks", "Saved websites", Icons.Default.BookmarkBorder, Modifier.weight(1f)) { browser.pendingPanel = BrowserPanel.BOOKMARKS; onNavigate("browser") }
         }
 
         GlassCard(Modifier.fillMaxWidth()) {
@@ -185,10 +202,31 @@ fun HomeScreen(vm: DownloadsViewModel, browser: BrowserManager, onNavigate: (Str
 }
 
 @Composable
-private fun QuickAction(title: String, subtitle: String, modifier: Modifier, onClick: () -> Unit) {
+private fun QuickAction(
+    title: String,
+    subtitle: String,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    modifier: Modifier,
+    onClick: () -> Unit,
+) {
     GlassCard(modifier, onClick = onClick) {
-        Text(title, style = MaterialTheme.typography.titleMedium)
-        Text(subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Box(
+            Modifier.size(42.dp).clip(RoundedCornerShape(14.dp))
+                .background(Brush.linearGradient(listOf(Violet.copy(alpha = 0.22f), Cyan.copy(alpha = 0.14f)))),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(icon, contentDescription = null, tint = Cyan, modifier = Modifier.size(23.dp))
+        }
+        Spacer(Modifier.height(12.dp))
+        Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+        Spacer(Modifier.height(3.dp))
+        Text(
+            subtitle,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+        )
     }
 }
 
