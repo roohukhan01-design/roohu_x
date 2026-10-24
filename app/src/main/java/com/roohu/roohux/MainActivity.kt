@@ -68,67 +68,83 @@ class MainActivity : ComponentActivity() {
                             Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
                                 Box(
                                     Modifier.fillMaxSize().background(
-                                        androidx.compose.ui.graphics.Brush.verticalGradient(
-                                            listOf(
-                                                MaterialTheme.colorScheme.background,
-                                                Violet.copy(alpha = 0.16f),
-                                                Cyan.copy(alpha = 0.08f),
-                                                MaterialTheme.colorScheme.background,
-                                            ),
+                                        androidx.compose.ui.graphics.Brush.linearGradient(
+                                            listOf(Color(0xFF080C16), Color(0xFF15162B), Color(0xFF0C1821)),
                                         ),
                                     ),
                                 ) {
-                                    HoloOrb(
-                                        Modifier.align(Alignment.Center).size(260.dp),
+                                    Box(
+                                        Modifier.align(Alignment.TopStart).padding(start = 28.dp, top = 58.dp)
+                                            .size(width = 46.dp, height = 4.dp)
+                                            .background(Cyan, androidx.compose.foundation.shape.RoundedCornerShape(8.dp)),
+                                    )
+                                    Text(
+                                        "PERSONAL MEDIA PLAYER",
+                                        modifier = Modifier.align(Alignment.TopStart).padding(start = 28.dp, top = 76.dp),
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     )
                                     Column(
-                                        Modifier.align(Alignment.Center).padding(horizontal = 28.dp),
+                                        Modifier.align(Alignment.Center).fillMaxWidth().padding(horizontal = 28.dp),
                                         horizontalAlignment = Alignment.CenterHorizontally,
                                         verticalArrangement = Arrangement.Center,
                                     ) {
-                                        Text(
-                                            "ROOHU",
-                                            style = MaterialTheme.typography.labelLarge,
-                                            color = Cyan,
-                                        )
-                                        Spacer(Modifier.height(6.dp))
+                                        Box(contentAlignment = Alignment.Center, modifier = Modifier.size(190.dp)) {
+                                            HoloOrb(Modifier.fillMaxSize())
+                                            Surface(
+                                                modifier = Modifier.size(92.dp),
+                                                shape = androidx.compose.foundation.shape.RoundedCornerShape(28.dp),
+                                                color = MaterialTheme.colorScheme.surface,
+                                                border = androidx.compose.foundation.BorderStroke(1.dp, Cyan.copy(alpha = 0.45f)),
+                                                shadowElevation = 0.dp,
+                                            ) {
+                                                Box(contentAlignment = Alignment.Center) {
+                                                    Text(
+                                                        "R",
+                                                        style = MaterialTheme.typography.displayMedium,
+                                                        fontWeight = androidx.compose.ui.text.font.FontWeight.Black,
+                                                        color = MaterialTheme.colorScheme.primary,
+                                                    )
+                                                }
+                                            }
+                                        }
+                                        Spacer(Modifier.height(18.dp))
+                                        Text("ROOHU", style = MaterialTheme.typography.labelLarge, color = Cyan, letterSpacing = androidx.compose.ui.unit.sp(4))
+                                        Spacer(Modifier.height(4.dp))
                                         Text(
                                             "RoohuX",
                                             style = MaterialTheme.typography.displayLarge,
+                                            fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
                                             color = MaterialTheme.colorScheme.onBackground,
                                         )
-                                        Spacer(Modifier.height(10.dp))
-                                        Text(
-                                            "YOUR MEDIA. YOUR UNIVERSE.",
-                                            style = MaterialTheme.typography.labelMedium,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        )
-                                        Spacer(Modifier.height(36.dp))
+                                        Spacer(Modifier.height(8.dp))
+                                        Text("Your media, beautifully in sync.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                        Spacer(Modifier.height(34.dp))
                                         if (!settings.reduceMotion && !systemReduce) {
-                                            CircularProgressIndicator(
-                                                modifier = Modifier.size(28.dp),
+                                            LinearProgressIndicator(
+                                                modifier = Modifier.fillMaxWidth(0.48f).height(3.dp),
                                                 color = Cyan,
-                                                strokeWidth = 2.dp,
-                                                trackColor = Violet.copy(alpha = 0.22f),
+                                                trackColor = Violet.copy(alpha = 0.24f),
                                             )
+                                        } else {
+                                            Box(Modifier.width(48.dp).height(3.dp).background(Cyan, androidx.compose.foundation.shape.RoundedCornerShape(8.dp)))
                                         }
-                                        Spacer(Modifier.height(12.dp))
+                                        Spacer(Modifier.height(14.dp))
                                         Text(
-                                            "PREPARING YOUR EXPERIENCE",
+                                            "GETTING THINGS READY",
                                             style = MaterialTheme.typography.labelSmall,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            letterSpacing = androidx.compose.ui.unit.sp(1.5),
                                         )
                                     }
                                     Text(
-                                        "BUILT FOR YOUR MEDIA",
+                                        "MADE FOR YOUR OWN UNIVERSE",
                                         modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 34.dp),
                                         style = MaterialTheme.typography.labelSmall,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.72f),
+                                        letterSpacing = androidx.compose.ui.unit.sp(1.2),
                                     )
-                                }
-                            }
-                        }
-                    }
+                                } }
                 }
             }
         }
