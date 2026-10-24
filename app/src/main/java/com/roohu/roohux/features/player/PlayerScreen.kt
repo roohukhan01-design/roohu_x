@@ -2,6 +2,9 @@ package com.roohu.roohux.features.player
 
 import android.content.ComponentName
 import android.content.pm.ActivityInfo
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.foundation.layout.*
@@ -46,6 +49,7 @@ fun PlayerScreen(uri: String, title: String, onBack: () -> Unit) {
     var controller by remember { mutableStateOf<MediaController?>(null) }
     var errorText by remember { mutableStateOf<String?>(null) }
     var audioOnly by remember { mutableStateOf(false) }
+    var controlsVisible by remember { mutableStateOf(true) }
     val positionPrefs = remember(context) { context.getSharedPreferences("roohux_playback_positions", android.content.Context.MODE_PRIVATE) }
     val positionKey = remember(uri) { "position_${uri.hashCode()}" }
 
@@ -129,6 +133,9 @@ fun PlayerScreen(uri: String, title: String, onBack: () -> Unit) {
                     useController = true
                     controllerShowTimeoutMs = 4000
                     controllerHideOnTouch = true
+                    setControllerVisibilityListener(PlayerView.ControllerVisibilityListener { visibility ->
+                        controlsVisible = visibility == android.view.View.VISIBLE
+                    })
                     resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
                     keepScreenOn = true
                     setShowBuffering(PlayerView.SHOW_BUFFERING_ALWAYS)
@@ -142,6 +149,12 @@ fun PlayerScreen(uri: String, title: String, onBack: () -> Unit) {
             update = { view -> view.player = controller },
             onRelease = { view -> view.player = null },
         )
+        AnimatedVisibility(
+            visible = controlsVisible,
+            enter = fadeIn(animationSpec = androidx.compose.animation.core.tween(220)),
+            exit = fadeOut(animationSpec = androidx.compose.animation.core.tween(180)),
+            modifier = Modifier.align(Alignment.TopCenter),
+        ) {
         Row(
             Modifier.fillMaxWidth()
                 .background(Brush.verticalGradient(listOf(Color.Black.copy(alpha = 0.82f), Color.Transparent)))
@@ -156,6 +169,7 @@ fun PlayerScreen(uri: String, title: String, onBack: () -> Unit) {
                 Text("NOW PLAYING", color = Color.White.copy(alpha = 0.65f), style = MaterialTheme.typography.labelSmall)
                 Text(title, color = Color.White, maxLines = 1, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.titleMedium)
             }
+        }
         }
         errorText?.let {
             Text(it, Modifier.align(Alignment.Center).padding(32.dp), color = Color.White, textAlign = TextAlign.Center)
