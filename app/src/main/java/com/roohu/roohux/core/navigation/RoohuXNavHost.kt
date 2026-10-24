@@ -8,6 +8,28 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
+import android.content.ComponentName
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Alignment
+import androidx.compose.material3.Surface
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
+import androidx.media3.common.C
+import androidx.media3.common.Player
+import androidx.media3.session.MediaController
+import androidx.media3.session.SessionToken
+import com.roohu.roohux.features.player.PlaybackService
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -125,7 +147,9 @@ fun RoohuXNavHost(container: AppContainer) {
                 snackbarHost = { SnackbarHost(snackbar) },
                 bottomBar = {
                     if (route in BAR_ROUTES) {
-                        NavigationBar(containerColor = Color.Transparent) {
+                        Column {
+                            MiniPlayer(onOpen = { nav.navigate("player") { launchSingleTop = true } })
+                            NavigationBar(containerColor = Color.Transparent) {
                             Tab.entries.forEach { tab ->
                                 NavigationBarItem(
                                     selected = backStack?.destination?.hierarchy?.any { it.route == tab.route } == true,
@@ -133,6 +157,7 @@ fun RoohuXNavHost(container: AppContainer) {
                                     icon = { Icon(tab.icon, contentDescription = tab.label) },
                                     label = { Text(tab.label) },
                                 )
+                            }
                             }
                         }
                     }
@@ -168,6 +193,84 @@ fun RoohuXNavHost(container: AppContainer) {
                 },
                 modifier = Modifier.fillMaxSize().background(Color.Black),
             )
+        }
+    }
+}
+
+
+/** Compact audio controls stay visible above the tab bar while browsing the library. */
+@Composable
+private fun MiniPlayer(onOpen: () -> Unit) {
+    val context = LocalContext.current
+    var controller by remember { mutableStateOf<MediaController?>(null) }
+    var title by remember { mutableStateOf("") }
+    var playing by remember { mutableStateOf(false) }
+    var audio by remember { mutableStateOf(false) }
+    var progress by remember { mutableStateOf(0f) }
+
+    DisposableEffect(context) {
+        val token = SessionToken(context, ComponentName(context, PlaybackService::class.java))
+        val future = MediaController.Builder(context, token).buildAsync()
+        var attached: MediaController? = null
+        fun refresh(c: MediaController) {
+            title = c.mediaMetadata.title?.toString().orEmpty()
+            playing = c.isPlaying
+            audio = c.currentMediaItem != null && c.currentTracks.isTypeSelected(C.TRACK_TYPE_AUDIO) &&
+                !c.currentTracks.isTypeSelected(C.TRACK_TYPE_VIDEO)
+            progress = if (c.duration > 0L) (c.currentPosition.toFloat() / c.duration).coerceIn(0f, 1f) else 0f
+        }
+        val listener = object : Player.Listener {
+            override fun onEvents(player: Player, events: Player.Events) {
+                attached?.let { refresh(it) }
+            }
+        }
+        future.addListener({
+            try {
+                val c = future.get()
+                attached = c
+                c.addListener(listener)
+                controller = c
+                refresh(c)
+            } catch (_: Exception) { }
+        }, ContextCompat.getMainExecutor(context))
+        onDispose {
+            attached?.removeListener(listener)
+            controller = null
+            MediaController.releaseFuture(future)
+        }
+    }
+
+    if (audio && controller != null) {
+        Surface(
+            color = MaterialTheme.colorScheme.surfaceVariant,
+            tonalElevation = 6.dp,
+            modifier = Modifier.fillMaxWidth().clickable(onClick = onOpen),
+        ) {
+            Column {
+                Row(
+                    modifier = Modifier.fillMaxWidth().height(54.dp).padding(horizontal = 14.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    Icon(Icons.Default.PlayArrow, contentDescription = null)
+                    Text(
+                        title.ifBlank { "Now playing" },
+                        modifier = Modifier.weight(1f),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                    IconButton(onClick = {
+                        controller?.let { if (it.isPlaying) it.pause() else it.play() }
+                    }) {
+                        Text(if (playing) "❚❚" else "▶")
+                    }
+                }
+                LinearProgressIndicator(
+                    progress = { progress },
+                    modifier = Modifier.fillMaxWidth().height(2.dp),
+                )
+            }
         }
     }
 }
