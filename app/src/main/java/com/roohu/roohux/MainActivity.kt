@@ -26,6 +26,9 @@ import androidx.compose.runtime.remember
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.roohu.roohux.core.design.LocalReduceMotion
+import com.roohu.roohux.core.design.HoloOrb
+import com.roohu.roohux.core.design.Cyan
+import com.roohu.roohux.core.design.Violet
 import com.roohu.roohux.core.design.RoohuXTheme
 import com.roohu.roohux.core.design.isDark
 import com.roohu.roohux.core.navigation.RoohuXNavHost
@@ -62,14 +65,65 @@ class MainActivity : ComponentActivity() {
                         RoohuXNavHost(container)
                         AnimatedVisibility(visible = intro, enter = fadeIn(), exit = fadeOut()) {
                             Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
-                                Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.Center,
-                                    horizontalAlignment = Alignment.CenterHorizontally) {
-                                    Text("RoohuX", style = MaterialTheme.typography.displayLarge,
-                                        color = MaterialTheme.colorScheme.primary)
-                                    Spacer(Modifier.height(14.dp))
-                                    Text("YOUR MEDIA UNIVERSE", style = MaterialTheme.typography.labelLarge)
-                                    Spacer(Modifier.height(28.dp))
-                                    if (!settings.reduceMotion && !systemReduce) CircularProgressIndicator()
+                                Box(
+                                    Modifier.fillMaxSize().background(
+                                        androidx.compose.ui.graphics.Brush.verticalGradient(
+                                            listOf(
+                                                MaterialTheme.colorScheme.background,
+                                                Violet.copy(alpha = 0.16f),
+                                                Cyan.copy(alpha = 0.08f),
+                                                MaterialTheme.colorScheme.background,
+                                            ),
+                                        ),
+                                    ),
+                                ) {
+                                    HoloOrb(
+                                        Modifier.align(Alignment.Center).size(260.dp),
+                                    )
+                                    Column(
+                                        Modifier.align(Alignment.Center).padding(horizontal = 28.dp),
+                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                        verticalArrangement = Arrangement.Center,
+                                    ) {
+                                        Text(
+                                            "ROOHU",
+                                            style = MaterialTheme.typography.labelLarge,
+                                            color = Cyan,
+                                        )
+                                        Spacer(Modifier.height(6.dp))
+                                        Text(
+                                            "RoohuX",
+                                            style = MaterialTheme.typography.displayLarge,
+                                            color = MaterialTheme.colorScheme.onBackground,
+                                        )
+                                        Spacer(Modifier.height(10.dp))
+                                        Text(
+                                            "YOUR MEDIA. YOUR UNIVERSE.",
+                                            style = MaterialTheme.typography.labelMedium,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        )
+                                        Spacer(Modifier.height(36.dp))
+                                        if (!settings.reduceMotion && !systemReduce) {
+                                            CircularProgressIndicator(
+                                                modifier = Modifier.size(28.dp),
+                                                color = Cyan,
+                                                strokeWidth = 2.dp,
+                                                trackColor = Violet.copy(alpha = 0.22f),
+                                            )
+                                        }
+                                        Spacer(Modifier.height(12.dp))
+                                        Text(
+                                            "PREPARING YOUR EXPERIENCE",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        )
+                                    }
+                                    Text(
+                                        "BUILT FOR YOUR MEDIA",
+                                        modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 34.dp),
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.72f),
+                                    )
                                 }
                             }
                         }
