@@ -2,6 +2,7 @@ package com.roohu.roohux.features.player
 
 import android.content.ComponentName
 import android.content.pm.ActivityInfo
+import android.content.res.Configuration
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -27,6 +28,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -53,6 +55,7 @@ import com.roohu.roohux.core.design.findActivity
 @Composable
 fun PlayerScreen(uri: String, title: String, onBack: () -> Unit) {
     val context = LocalContext.current
+    val landscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
     var controller by remember { mutableStateOf<MediaController?>(null) }
     var errorText by remember { mutableStateOf<String?>(null) }
     var audioOnly by remember { mutableStateOf(false) }
@@ -236,6 +239,20 @@ fun PlayerScreen(uri: String, title: String, onBack: () -> Unit) {
                     overflow = TextOverflow.Ellipsis,
                     style = MaterialTheme.typography.titleMedium,
                 )
+            }
+            if (landscape) {
+                TextButton(
+                    onClick = {
+                        context.findActivity()?.requestedOrientation =
+                            ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+                    },
+                    colors = ButtonDefaults.textButtonColors(
+                        containerColor = Color.White.copy(alpha = 0.12f),
+                        contentColor = Color.White,
+                    ),
+                ) {
+                    Text("Exit fullscreen", style = MaterialTheme.typography.labelSmall, maxLines = 1)
+                }
             }
             // Compact transport shortcuts. Media3's original timeline and advanced controls remain available.
             if (!audioOnly && controller != null) {
