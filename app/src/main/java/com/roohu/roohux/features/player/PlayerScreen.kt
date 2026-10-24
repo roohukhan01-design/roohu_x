@@ -82,6 +82,7 @@ fun PlayerScreen(uri: String, title: String, onBack: () -> Unit) {
     val playerAccent = playerThemeAccents[playerThemeIndex]
     val speedOptions = listOf(0.75f, 1.0f, 1.25f, 1.5f, 2.0f)
     var speedIndex by remember(context) { mutableIntStateOf(positionPrefs.getInt("player_speed_index", 1).coerceIn(0, speedOptions.lastIndex)) }
+    var repeatOne by remember(context) { mutableStateOf(positionPrefs.getBoolean("player_repeat_one", false)) }
     val aspectNames = listOf("Fit", "Fill", "Zoom")
     val aspectModes = listOf(AspectRatioFrameLayout.RESIZE_MODE_FIT, AspectRatioFrameLayout.RESIZE_MODE_FILL, AspectRatioFrameLayout.RESIZE_MODE_ZOOM)
     var aspectIndex by remember(context) { mutableIntStateOf(positionPrefs.getInt("player_aspect_index", 0).coerceIn(0, 2)) }
@@ -127,6 +128,7 @@ fun PlayerScreen(uri: String, title: String, onBack: () -> Unit) {
                 positionPrefs.edit().putLong("recent_${uri.hashCode()}", System.currentTimeMillis()).apply()
                 c.prepare()
                 c.playbackParameters = PlaybackParameters(speedOptions[speedIndex])
+                c.repeatMode = if (repeatOne) Player.REPEAT_MODE_ONE else Player.REPEAT_MODE_OFF
                 c.playWhenReady = true
                 controller = c
             } catch (e: Exception) {
@@ -306,6 +308,22 @@ fun PlayerScreen(uri: String, title: String, onBack: () -> Unit) {
                 ),
             ) {
                 Text("${speedOptions[speedIndex]}×", style = MaterialTheme.typography.labelSmall, maxLines = 1)
+            }
+            TextButton(
+                onClick = {
+                    repeatOne = !repeatOne
+                    positionPrefs.edit().putBoolean("player_repeat_one", repeatOne).apply()
+                    controller?.repeatMode = if (repeatOne) Player.REPEAT_MODE_ONE else Player.REPEAT_MODE_OFF
+                    seekNotice = if (repeatOne) "Repeat one enabled" else "Repeat off"
+                    seekNoticeVersion++
+                },
+                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
+                colors = ButtonDefaults.textButtonColors(
+                    containerColor = if (repeatOne) playerAccent.copy(alpha = 0.2f) else Color.White.copy(alpha = 0.12f),
+                    contentColor = if (repeatOne) playerAccent else Color.White,
+                ),
+            ) {
+                Text(if (repeatOne) "Repeat 1" else "Repeat", style = MaterialTheme.typography.labelSmall, maxLines = 1)
             }
             TextButton(
                 onClick = { screenLocked = true },
