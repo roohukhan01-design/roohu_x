@@ -183,9 +183,10 @@ class DownloadEngine(
             if (ctype != null && (ctype == "text/html" || ctype == "application/xhtml+xml") && ext !in HTML_EXT) {
                 throw DownloadException(DownloadError.NOT_A_FILE, ctype)
             }
-            name = if ('.' !in determined && mime != OCTET) {
-                MimeTypeMap.getSingleton().getExtensionFromMimeType(mime)?.let { "$determined.$it" } ?: determined
-            } else determined
+            // Preserve the filename supplied by the server or source URL exactly after
+            // safety sanitization. Do not append/replace extensions based only on MIME type.
+            // MIME type is stored separately for apps that open the downloaded file.
+            name = determined
         } else {
             name = latest.fileName
             mime = latest.mimeType ?: OCTET
