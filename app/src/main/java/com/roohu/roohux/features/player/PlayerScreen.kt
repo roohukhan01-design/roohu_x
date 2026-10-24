@@ -14,6 +14,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.*
 import kotlinx.coroutines.delay
 import androidx.compose.ui.Alignment
@@ -50,11 +51,13 @@ fun PlayerScreen(uri: String, title: String, onBack: () -> Unit) {
     var errorText by remember { mutableStateOf<String?>(null) }
     var audioOnly by remember { mutableStateOf(false) }
     var controlsVisible by remember { mutableStateOf(true) }
+    var buffering by remember { mutableStateOf(false) }
     val positionPrefs = remember(context) { context.getSharedPreferences("roohux_playback_positions", android.content.Context.MODE_PRIVATE) }
     val positionKey = remember(uri) { "position_${uri.hashCode()}" }
 
     DisposableEffect(uri) {
         errorText = null
+        buffering = false
         val token = SessionToken(context, ComponentName(context, PlaybackService::class.java))
         val future = MediaController.Builder(context, token).buildAsync()
         var attached: MediaController? = null
@@ -68,6 +71,7 @@ fun PlayerScreen(uri: String, title: String, onBack: () -> Unit) {
             }
 
             override fun onPlaybackStateChanged(playbackState: Int) {
+                buffering = playbackState == Player.STATE_BUFFERING
                 if (playbackState == Player.STATE_ENDED) positionPrefs.edit().remove(positionKey).apply()
             }
         }
@@ -103,6 +107,7 @@ fun PlayerScreen(uri: String, title: String, onBack: () -> Unit) {
                 if (c.currentTracks.isTypeSelected(C.TRACK_TYPE_VIDEO)) c.pause() // video doesn't continue in the background
             }
             controller = null
+            buffering = false
             MediaController.releaseFuture(future)
         }
     }
@@ -138,7 +143,7 @@ fun PlayerScreen(uri: String, title: String, onBack: () -> Unit) {
                     })
                     resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
                     keepScreenOn = true
-                    setShowBuffering(PlayerView.SHOW_BUFFERING_ALWAYS)
+                    setShowBuffering(PlayerView.SHOW_BUFFERING_NEVER)
                     setShutterBackgroundColor(android.graphics.Color.BLACK)
                     setFullscreenButtonClickListener { fullscreen ->
                         ctx.findActivity()?.requestedOrientation =
@@ -149,6 +154,19 @@ fun PlayerScreen(uri: String, title: String, onBack: () -> Unit) {
             update = { view -> view.player = controller },
             onRelease = { view -> view.player = null },
         )
+        AnimatedVisibility(
+            visible = buffering && errorText == null && !audioOnly,
+            enter = fadeIn(animationSpec = androidx.compose.animation.core.tween(200)),
+            exit = fadeOut(animationSpec = androidx.compose.animation.core.tween(180)),
+            modifier = Modifier.align(Alignment.Center),
+        ) {
+            CircularProgressIndicator(
+                modifier = Modifier.size(44.dp),
+                color = Color.White.copy(alpha = 0.92f),
+                strokeWidth = 3.dp,
+                trackColor = Color.White.copy(alpha = 0.14f),
+            )
+        }
         AnimatedVisibility(
             visible = controlsVisible,
             enter = fadeIn(animationSpec = androidx.compose.animation.core.tween(220)),
