@@ -125,7 +125,13 @@ fun PlayerScreen(uri: String, title: String, onBack: () -> Unit) {
                 )
                 // Restore the last saved position before playback starts.
                 val savedPosition = positionPrefs.getLong(positionKey, 0L)
-                if (savedPosition > 0L) c.seekTo(savedPosition)
+                if (savedPosition > 0L) {
+                    c.seekTo(savedPosition)
+                    val totalSeconds = savedPosition / 1_000L
+                    val resumeTime = "%02d:%02d".format(totalSeconds / 60L, totalSeconds % 60L)
+                    seekNotice = "Resuming from $resumeTime"
+                    seekNoticeVersion++
+                }
                 positionPrefs.edit().putLong("recent_${uri.hashCode()}", System.currentTimeMillis()).apply()
                 c.prepare()
                 c.playbackParameters = PlaybackParameters(speedOptions[speedIndex])
